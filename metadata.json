@@ -1,0 +1,5 @@
+{
+  "name": "App Canvas AI",
+  "description": "A visual workspace that uses AI to help you brainstorm and design your next application idea. It guides you through a 10-step process from modules and features to database design and UI guidelines, all within an interactive mind map.",
+  "requestFramePermissions": []
+}
