@@ -1,3 +1,4 @@
+export type Theme = 'light' | 'dark';
 
 export type StepKey = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 
@@ -32,17 +33,20 @@ export interface Action {
 }
 
 export interface Page {
+    id: string;
     name: string;
     moduleId: string;
     description: string;
     layout: string;
     components: string[];
+    links_to: string[];
 }
 
 export interface Entity {
+    id: string;
     name: string;
     attributes: { name: string; type: string; description: string }[];
-    relationships: string[];
+    relationships: { targetEntityId: string; type: string; description: string }[];
     constraints: string[];
     logging: string[];
 }
@@ -78,7 +82,8 @@ export interface DesignGuidelines {
 // A flexible container for data from all steps
 export interface AppData {
     [key: number]: any;
-    1?: { description: string; modules: Module[] };
+    // FIX: Changed `description` to `refinedIdea` to match the schema for Step 1.
+    1?: { refinedIdea: string; modules: Module[] };
     2?: { features: Feature[] };
     3?: { actions: Action[] };
     4?: { pages: Page[] };

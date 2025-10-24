@@ -1,3 +1,4 @@
+
 import React from 'react';
 import type { Step, StepKey } from '../types';
 
@@ -9,26 +10,27 @@ interface TimelineProps {
 
 export const Timeline: React.FC<TimelineProps> = ({ steps, activeStep, completedSteps }) => {
     return (
-        <ol className="relative border-l border-gray-700">
+        <ol className="relative border-l border-gray-200 dark:border-gray-700">
             {steps.map((step) => {
                 const isCompleted = completedSteps.includes(step.id);
                 const isActive = activeStep === step.id;
 
-                let ringColor = 'bg-gray-700';
+                let ringColor = 'bg-gray-300 dark:bg-gray-700';
                 if (isActive) {
                     ringColor = 'bg-orange-500 ring-4 ring-orange-500/30';
                 } else if (isCompleted) {
                     ringColor = 'bg-green-500';
                 }
 
-                const textColor = isActive ? 'text-orange-300 font-bold' : isCompleted ? 'text-gray-200' : 'text-gray-400';
+                const textColor = isActive ? 'text-orange-500 dark:text-orange-300 font-bold' : isCompleted ? 'text-gray-800 dark:text-gray-200' : 'text-gray-500 dark:text-gray-400';
+                const descriptionColor = isCompleted ? 'text-gray-600 dark:text-gray-400' : 'text-gray-500';
 
                 return (
                     <li key={step.id} className="mb-8 ml-4 transition-all duration-300">
-                        <div className={`absolute w-3 h-3 ${ringColor} rounded-full mt-1.5 -left-1.5 border border-gray-900 transition-all duration-300`}></div>
-                        <time className="mb-1 text-xs font-normal leading-none text-gray-500">{`Step ${step.id}`}</time>
+                        <div className={`absolute w-3 h-3 ${ringColor} rounded-full mt-1.5 -left-1.5 border border-white dark:border-gray-900 transition-all duration-300`}></div>
+                        <time className="mb-1 text-xs font-normal leading-none text-gray-400 dark:text-gray-500">{`Step ${step.id}`}</time>
                         <h3 className={`text-base font-semibold ${textColor}`}>{step.name}</h3>
-                        <p className="text-sm font-normal text-gray-500">{step.description}</p>
+                        <p className={`text-sm font-normal ${descriptionColor}`}>{step.description}</p>
                     </li>
                 );
             })}

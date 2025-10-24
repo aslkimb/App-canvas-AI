@@ -1,144 +1,133 @@
 import { Type } from '@google/genai';
-import type { Step, AppData } from './types';
+import { Step } from './types';
 
-// Helper functions to create detailed context strings from previous steps.
-const getModulesContext = (data: AppData) => data[1] ? `Modules:\n${JSON.stringify(data[1].modules, null, 2)}\n` : '';
-const getFeaturesContext = (data: AppData) => data[2] ? `Features:\n${JSON.stringify(data[2].features, null, 2)}\n` : '';
-const getActionsContext = (data: AppData) => data[3] ? `Actions:\n${JSON.stringify(data[3].actions, null, 2)}\n` : '';
-const getSchemaContext = (data: AppData) => data[5] ? `Data Schema:\n${JSON.stringify(data[5].database, null, 2)}\n` : '';
+// FIX: Added AVAILABLE_MODELS export.
+export const AVAILABLE_MODELS = [
+    { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro' },
+    { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash' },
+];
 
 export const STEPS: Step[] = [
-    {
-        id: 0,
-        name: 'Refine Idea',
-        description: 'Clarifying the core concept.',
-        prompt: (idea: string, data: AppData, context: any) => `
-            Original app idea: "${idea}".
-            The user clarified the primary goal is: "${context.clarificationAnswer}".
-            Please rewrite the app idea into a single, refined paragraph that incorporates this goal.
-            Also, identify the primary target audience based on this refined idea.
-        `,
-        schema: {
-            type: Type.OBJECT,
-            properties: {
-                refinedIdea: { type: Type.STRING, description: "The refined, single-paragraph app idea." },
-                targetAudience: { type: Type.STRING, description: "The primary target audience for the app." }
-            },
-            required: ['refinedIdea', 'targetAudience'],
-        },
-        needsClarification: true,
-        clarificationPrompt: (idea: string) => `To better understand your app idea "${idea}", which of these best describes its primary goal?`,
-    },
+    // Step 0 is the initial idea input, not part of this array
     {
         id: 1,
-        name: 'Modules & Core Concept',
-        description: 'Defining the high-level structure.',
-        prompt: (idea: string, data: AppData, context: any) => `
-            Based on the refined app idea "${idea}", and keeping in mind the user wants to focus on "${context.clarificationAnswer}", provide a concise, one-paragraph summary of the core concept.
-            Then, break down the application into logical, high-level modules that reflect this focus. For each module, provide a unique snake_case_id, a name, and a short description of its purpose. Include a "Settings" module for global application settings.
+        name: "Refine Idea & Define Modules",
+        description: "AI refines the initial idea and breaks it down into high-level modules.",
+        prompt: (idea, data) => `
+            You are an expert software architect. Your task is to analyze an application idea and structure it.
+            Initial Idea: "${idea}"
+            
+            1.  Refine the initial idea into a clear, concise, and compelling concept.
+            2.  Break down the refined idea into high-level, logical modules. Each module should represent a major functional area of the application.
+            
+            Provide the output in the specified JSON format.
+            -   'id' for modules should be in snake_case.
         `,
         schema: {
             type: Type.OBJECT,
             properties: {
-                description: { type: Type.STRING, description: "A one-paragraph summary of the app idea." },
+                refinedIdea: { type: Type.STRING, description: 'A clear, concise, and compelling version of the initial app idea.' },
                 modules: {
                     type: Type.ARRAY,
-                    description: "A list of high-level application modules.",
                     items: {
                         type: Type.OBJECT,
                         properties: {
-                            id: { type: Type.STRING, description: "A unique snake_case identifier for the module." },
-                            name: { type: Type.STRING, description: "The user-friendly name of the module." },
-                            description: { type: Type.STRING, description: "A short description of the module's purpose." },
+                            id: { type: Type.STRING, description: 'Unique identifier for the module (e.g., user_management).' },
+                            name: { type: Type.STRING, description: 'The name of the module (e.g., User Management).' },
+                            description: { type: Type.STRING, description: 'A brief description of what this module covers.' }
                         },
-                        required: ['id', 'name', 'description'],
-                    },
-                },
+                        required: ['id', 'name', 'description']
+                    }
+                }
             },
-            required: ['description', 'modules'],
+            required: ['refinedIdea', 'modules']
         },
         needsClarification: true,
-        clarificationPrompt: (idea: string) => `For the app idea "${idea}", what is the most critical area to focus on when defining the main modules?`,
+        clarificationPrompt: (idea) => `To better define the application's core, what is the primary goal for users of this app: "${idea}"?`
     },
     {
         id: 2,
-        name: 'Features per Module',
-        description: 'Detailing the features for each module.',
-        prompt: (idea: string, data: AppData, context: any) => `
-            App Idea: "${idea}".
-            Here are the application modules:
-            ${JSON.stringify(data[1]?.modules, null, 2)}
-            
-            The user has indicated a preference for "${context.clarificationAnswer}". With that in mind, for each module listed above, define a set of specific features. For each feature, provide a unique snake_case_id, a name, and a description of what it does. Ensure each feature is assigned to the correct 'moduleId' by using the exact 'id' from the module list.
+        name: "Define Features",
+        description: "Identify the key features within each module.",
+        prompt: (idea, data) => `
+            Based on the refined idea and modules for the application, define the key features for each module.
+            Refined Idea: "${data[1]?.refinedIdea}"
+            Modules:
+            ${data[1]?.modules.map(m => `- ${m.name}: ${m.description}`).join('\n')}
+
+            For each module, list the essential features. Each feature should be a distinct piece of functionality.
+            Provide the output in the specified JSON format.
+            -   'id' for features should be in snake_case.
+            -   Ensure 'moduleId' correctly matches one of the provided module IDs.
         `,
         schema: {
             type: Type.OBJECT,
             properties: {
                 features: {
                     type: Type.ARRAY,
-                    description: "A list of all features for the application, categorized by module.",
                     items: {
                         type: Type.OBJECT,
                         properties: {
-                            id: { type: Type.STRING, description: "A unique snake_case identifier for the feature." },
-                            moduleId: { type: Type.STRING, description: "The ID of the module this feature belongs to." },
-                            name: { type: Type.STRING, description: "The user-friendly name of the feature." },
-                            description: { type: Type.STRING, description: "A description of the feature's functionality." },
+                            id: { type: Type.STRING, description: 'Unique identifier for the feature (e.g., user_login).' },
+                            moduleId: { type: Type.STRING, description: 'The ID of the parent module.' },
+                            name: { type: Type.STRING, description: 'The name of the feature (e.g., User Login).' },
+                            description: { type: Type.STRING, description: 'A brief description of the feature.' }
                         },
-                        required: ['id', 'moduleId', 'name', 'description'],
-                    },
-                },
+                        required: ['id', 'moduleId', 'name', 'description']
+                    }
+                }
             },
-            required: ['features'],
+            required: ['features']
         },
-        needsClarification: true,
-        clarificationPrompt: () => `When designing features for the modules we've defined, should we prioritize simplicity and ease-of-use, or a rich, comprehensive feature set?`,
+        clarificationPrompt: (idea, data) => `Considering the features for "${data[1]?.refinedIdea}", are there any specific integrations with third-party services (like social media login, payment gateways, etc.) that are essential?`
     },
     {
         id: 3,
-        name: 'User Actions per Feature',
-        description: 'Listing user actions for each feature.',
-        prompt: (idea: string, data: AppData, context: any) => `
-            App Idea: "${idea}".
-            Here are the application's features, grouped by module:
-            ${JSON.stringify(data[2]?.features, null, 2)}
-            
-            For each feature, define a list of specific user actions. A user action is a single, concrete task a user can perform. Focus on "${context.clarificationAnswer}" when defining the actions. Provide a unique snake_case_id, a name, and a description for each action. Assign each action to its parent feature using the correct 'featureId'.
+        name: "Detail User Actions",
+        description: "Break down each feature into specific user actions.",
+        prompt: (idea, data) => `
+            For each feature defined, break it down into specific, atomic user actions. An action is a single thing a user can *do*.
+            Features:
+            ${data[2]?.features.map(f => `- ${f.name}: ${f.description}`).join('\n')}
+
+            Provide the output in the specified JSON format.
+            -   'id' for actions should be in snake_case.
+            -   Ensure 'featureId' correctly matches one of the provided feature IDs.
         `,
         schema: {
             type: Type.OBJECT,
             properties: {
                 actions: {
                     type: Type.ARRAY,
-                    description: "A list of all user actions for the application, categorized by feature.",
                     items: {
                         type: Type.OBJECT,
                         properties: {
-                            id: { type: Type.STRING, description: "A unique snake_case identifier for the action." },
-                            featureId: { type: Type.STRING, description: "The ID of the feature this action belongs to." },
-                            name: { type: Type.STRING, description: "The name of the user action (e.g., 'Submit Form')." },
-                            description: { type: Type.STRING, description: "A description of what happens when the user performs this action." },
+                            id: { type: Type.STRING, description: 'Unique identifier for the action (e.g., click_login_button).' },
+                            featureId: { type: Type.STRING, description: 'The ID of the parent feature.' },
+                            name: { type: Type.STRING, description: 'The name of the action (e.g., Click Login Button).' },
+                            description: { type: Type.STRING, description: 'A brief description of what the action does.' }
                         },
-                        required: ['id', 'featureId', 'name', 'description'],
-                    },
-                },
+                        required: ['id', 'featureId', 'name', 'description']
+                    }
+                }
             },
-            required: ['actions'],
+            required: ['actions']
         },
-        needsClarification: true,
-        clarificationPrompt: () => `For the user actions within each feature, should the focus be on granular, step-by-step interactions or high-level, primary actions?`,
+        clarificationPrompt: () => `Are there different user roles with different permissions (e.g., admin, user, moderator)?`
     },
     {
         id: 4,
-        name: 'Application Pages',
-        description: 'Defining UI pages and components.',
-        prompt: (idea: string, data: AppData, context: any) => `
-            App Idea: "${idea}".
-            Modules and features:
-            ${getModulesContext(data)}
-            ${getFeaturesContext(data)}
+        name: "Design Pages & User Flow",
+        description: "Outline the application's pages and how they connect.",
+        prompt: (idea, data) => `
+            Based on the modules and features, design the necessary pages (or screens) for the application.
+            Modules: ${JSON.stringify(data[1]?.modules)}
+            Features: ${JSON.stringify(data[2]?.features)}
 
-            Based on the modules and features, define the primary pages or screens for the user interface. Prioritize a "${context.clarificationAnswer}" approach. For each page, specify its name, the 'moduleId' it belongs to, a brief description, a suggested layout type (e.g., 'Dashboard', 'Form'), and a list of key UI components it would contain.
+            For each page, define its purpose, the main components it would contain, and which other pages it links to.
+            Provide the output in the specified JSON format.
+            -   'id' for pages should be in snake_case.
+            -   'links_to' should contain the IDs of other pages.
         `,
         schema: {
             type: Type.OBJECT,
@@ -148,32 +137,35 @@ export const STEPS: Step[] = [
                     items: {
                         type: Type.OBJECT,
                         properties: {
-                            name: { type: Type.STRING },
-                            moduleId: { type: Type.STRING },
-                            description: { type: Type.STRING },
-                            layout: { type: Type.STRING, description: "e.g., 'Dashboard Layout', 'Two-Column', 'Modal Dialog'" },
-                            components: { type: Type.ARRAY, items: { type: Type.STRING }, description: "e.g., ['User Profile Card', 'Data Table', 'Search Bar']" }
+                            id: { type: Type.STRING, description: 'Unique identifier for the page (e.g., login_page).' },
+                            name: { type: Type.STRING, description: 'The name of the page (e.g., Login Page).' },
+                            moduleId: { type: Type.STRING, description: 'The ID of the primary module this page belongs to.' },
+                            description: { type: Type.STRING, description: 'The purpose of this page.' },
+                            layout: { type: Type.STRING, description: 'A suggested layout type (e.g., "Dashboard with Sidebar", "Centered Form", "Grid View").' },
+                            components: { type: Type.ARRAY, items: { type: Type.STRING }, description: 'A list of key UI components on this page (e.g., "Login Form", "User Profile Header").' },
+                            links_to: { type: Type.ARRAY, items: { type: Type.STRING }, description: 'An array of page IDs that this page links to.' },
                         },
-                        required: ['name', 'moduleId', 'description', 'layout', 'components']
+                        required: ['id', 'name', 'moduleId', 'description', 'layout', 'components', 'links_to']
                     }
                 }
             },
             required: ['pages']
         },
-        needsClarification: true,
-        clarificationPrompt: () => `When designing the application pages, should we prioritize a mobile-first design or a desktop/web experience?`,
+        clarificationPrompt: () => `Is this primarily a mobile app, a desktop web app, or both?`
     },
     {
         id: 5,
-        name: 'Database Schema',
-        description: 'Designing the data model.',
-        prompt: (idea: string, data: AppData, context: any) => `
-            App Idea: "${idea}".
-            We have defined the following features and user actions:
-            ${getFeaturesContext(data)}
-            ${getActionsContext(data)}
+        name: "Define Database Schema",
+        description: "Design the data models, attributes, and relationships.",
+        prompt: (idea, data) => `
+            Based on the application's features and pages, design the database schema.
+            Features: ${JSON.stringify(data[2]?.features)}
+            Pages: ${JSON.stringify(data[4]?.pages)}
 
-            Based on the data requirements implied by these features, design a database schema. Design the schema with a priority on "${context.clarificationAnswer}". Define the entities (tables), their attributes (columns) with data types, relationships, constraints, and logging requirements.
+            Define the necessary data entities, their attributes (with types), and the relationships between them.
+            Also, consider any constraints or logging requirements.
+            Provide the output in the specified JSON format.
+            - 'id' for entities should be in PascalCase (e.g., UserProfile).
         `,
         schema: {
             type: Type.OBJECT,
@@ -183,44 +175,53 @@ export const STEPS: Step[] = [
                     items: {
                         type: Type.OBJECT,
                         properties: {
-                            name: { type: Type.STRING, description: "The name of the data entity (e.g., 'User', 'Post')." },
+                            id: { type: Type.STRING, description: 'Unique identifier for the entity, in PascalCase (e.g., UserProfile).' },
+                            name: { type: Type.STRING, description: 'The name of the entity.' },
                             attributes: {
                                 type: Type.ARRAY,
                                 items: {
                                     type: Type.OBJECT,
                                     properties: {
-                                        name: { type: Type.STRING },
-                                        type: { type: Type.STRING, description: "SQL-like data type (e.g., 'VARCHAR(255)', 'INTEGER', 'BOOLEAN', 'TIMESTAMP')." },
-                                        description: { type: Type.STRING }
+                                        name: { type: Type.STRING, description: 'Attribute name (e.g., userName).' },
+                                        type: { type: Type.STRING, description: 'Data type (e.g., String, Int, DateTime, Boolean).' },
+                                        description: { type: Type.STRING, description: 'Description of the attribute.' },
                                     },
                                     required: ['name', 'type', 'description']
                                 }
                             },
-                            relationships: { type: Type.ARRAY, items: { type: Type.STRING }, description: "e.g., ['has many Posts', 'belongs to a User']" },
-                            constraints: { type: Type.ARRAY, items: { type: Type.STRING }, description: "e.g., ['email must be unique', 'password must be hashed']" },
-                            logging: { type: Type.ARRAY, items: { type: Type.STRING }, description: "e.g., ['log on create', 'log on update']" }
+                            relationships: {
+                                type: Type.ARRAY,
+                                items: {
+                                    type: Type.OBJECT,
+                                    properties: {
+                                        targetEntityId: { type: Type.STRING, description: 'The ID of the entity this one relates to.' },
+                                        type: { type: Type.STRING, description: 'Type of relationship (e.g., One-to-Many, Many-to-One, One-to-One).' },
+                                        description: { type: Type.STRING, description: 'Description of the relationship.' },
+                                    },
+                                    required: ['targetEntityId', 'type', 'description']
+                                }
+                            },
+                            constraints: { type: Type.ARRAY, items: { type: Type.STRING }, description: 'Data constraints (e.g., "email must be unique").' },
+                            logging: { type: Type.ARRAY, items: { type: Type.STRING }, description: 'Logging requirements (e.g., "log on create", "log on update").' },
                         },
-                        required: ['name', 'attributes', 'relationships', 'constraints', 'logging']
+                        required: ['id', 'name', 'attributes', 'relationships', 'constraints', 'logging']
                     }
                 }
             },
             required: ['database']
         },
-        needsClarification: true,
-        clarificationPrompt: () => `For the database schema, what is the higher priority: scalability, simplicity, or data integrity?`,
+        clarificationPrompt: () => `What level of data persistence and security is required? Does it need to comply with regulations like GDPR or HIPAA?`
     },
     {
         id: 6,
-        name: 'Feature Details',
-        description: 'Fleshing out implementation details.',
-        prompt: (idea: string, data: AppData, context: any) => `
-            App Idea: "${idea}".
-            Here are the features:
-            ${getFeaturesContext(data)}
-            And the data schema:
-            ${getSchemaContext(data)}
+        name: "Plan Feature Implementation",
+        description: "Detail technical aspects for each feature.",
+        prompt: (idea, data) => `
+            For each key feature, provide a high-level technical implementation plan.
+            Features: ${JSON.stringify(data[2]?.features)}
 
-            For each feature, provide implementation details. Favor a "${context.clarificationAnswer}" technical approach. Consider state management, form handling (validation, submission), and authorization (e.g., 'public', 'user only', 'admin only').
+            Consider state management, form handling, and authorization logic for each feature.
+            Provide the output in the specified JSON format.
         `,
         schema: {
             type: Type.OBJECT,
@@ -230,10 +231,10 @@ export const STEPS: Step[] = [
                     items: {
                         type: Type.OBJECT,
                         properties: {
-                            featureId: { type: Type.STRING },
-                            stateManagement: { type: Type.STRING, description: "How is UI state managed for this feature?" },
-                            formHandling: { type: Type.STRING, description: "How are forms and user input validated and submitted?" },
-                            authorization: { type: Type.STRING, description: "What permissions are required to use this feature?" },
+                            featureId: { type: Type.STRING, description: 'The ID of the feature being detailed.' },
+                            stateManagement: { type: Type.STRING, description: 'How to manage state for this feature (e.g., "Local component state for form inputs, global state for user data").' },
+                            formHandling: { type: Type.STRING, description: 'How to handle forms and validation (e.g., "Use a library like Formik, with Yup for validation").' },
+                            authorization: { type: Type.STRING, description: 'Authorization rules (e.g., "Only authenticated users can access. Admins have full CRUD.").' },
                         },
                         required: ['featureId', 'stateManagement', 'formHandling', 'authorization']
                     }
@@ -241,21 +242,18 @@ export const STEPS: Step[] = [
             },
             required: ['featureDetails']
         },
-        needsClarification: true,
-        clarificationPrompt: () => `Regarding the implementation details for features, what technical approach should we favor?`,
+        clarificationPrompt: () => `What is the preferred technology stack for the frontend (e.g., React, Vue, Angular)?`
     },
     {
         id: 7,
-        name: 'Backend Logic',
-        description: 'Defining backend functions and jobs.',
-        prompt: (idea: string, data: AppData, context: any) => `
-            App Idea: "${idea}".
-            Context:
-            ${getFeaturesContext(data)}
-            ${getActionsContext(data)}
-            ${getSchemaContext(data)}
+        name: "Define Backend Logic",
+        description: "Outline backend functions and cron jobs.",
+        prompt: (idea, data) => `
+            Based on the features and data models, define the necessary backend API endpoints/functions and any required scheduled tasks (cron jobs).
+            Features: ${JSON.stringify(data[2]?.features)}
+            Database Entities: ${JSON.stringify(data[5]?.database.map(e => e.id))}
 
-            Based on the application's needs, define the necessary backend logic. The architecture should lean towards a "${context.clarificationAnswer}" model. This includes serverless functions or API endpoints tied to features, as well as any recurring background tasks (cron jobs).
+            Provide the output in the specified JSON format.
         `,
         schema: {
             type: Type.OBJECT,
@@ -268,9 +266,9 @@ export const STEPS: Step[] = [
                             items: {
                                 type: Type.OBJECT,
                                 properties: {
-                                    featureId: { type: Type.STRING },
-                                    name: { type: Type.STRING, description: "e.g., 'processUserProfileUpdate'" },
-                                    description: { type: Type.STRING, description: "What does this serverless function or API endpoint do?" },
+                                    featureId: { type: Type.STRING, description: 'The ID of the feature this function supports.' },
+                                    name: { type: Type.STRING, description: 'The name of the function (e.g., "createUser").' },
+                                    description: { type: Type.STRING, description: 'What this function does, its inputs, and what it returns.' },
                                 },
                                 required: ['featureId', 'name', 'description']
                             }
@@ -280,9 +278,9 @@ export const STEPS: Step[] = [
                             items: {
                                 type: Type.OBJECT,
                                 properties: {
-                                    name: { type: Type.STRING },
-                                    schedule: { type: Type.STRING, description: "e.g., '0 0 * * *' (daily at midnight)" },
-                                    description: { type: Type.STRING, description: "What does this scheduled task do?" },
+                                    name: { type: Type.STRING, description: 'The name of the cron job.' },
+                                    schedule: { type: Type.STRING, description: 'The schedule in cron format (e.g., "0 0 * * *").' },
+                                    description: { type: Type.STRING, description: 'What this job does.' },
                                 },
                                 required: ['name', 'schedule', 'description']
                             }
@@ -293,19 +291,18 @@ export const STEPS: Step[] = [
             },
             required: ['backend']
         },
-        needsClarification: true,
-        clarificationPrompt: () => `For the backend architecture, should we lean towards a serverless model for scalability or a more traditional monolithic API for simplicity?`,
+        clarificationPrompt: () => `What is the preferred technology stack for the backend (e.g., Node.js, Python, serverless)?`
     },
     {
         id: 8,
-        name: 'Design System',
-        description: 'Establishing the visual style.',
-        prompt: (idea: string, data: AppData, context: any) => `
-            App Idea: "${idea}".
-            Target Audience: "${data[0]?.targetAudience}".
-            Clarification from user: The desired aesthetic is "${context.clarificationAnswer}".
+        name: "Establish Design System",
+        description: "Define colors, typography, and style guidelines.",
+        prompt: (idea, data) => `
+            To ensure a consistent user experience, create a basic design system for the application.
+            Refined Idea: "${data[1]?.refinedIdea}"
             
-            Based on the app idea, target audience, and desired aesthetic, generate a set of design guidelines. This should include a color palette (primary, secondary, accent, neutral hex codes), typography choices (heading and body fonts), the overall style, a spacing system, and an icon style.
+            Suggest a color palette, typography rules, general style, and guidelines for spacing and icons.
+            Provide the output in the specified JSON format.
         `,
         schema: {
             type: Type.OBJECT,
@@ -316,31 +313,30 @@ export const STEPS: Step[] = [
                         colors: {
                             type: Type.OBJECT,
                             properties: {
-                                primary: { type: Type.STRING, description: "Hex code for primary color." },
-                                secondary: { type: Type.STRING, description: "Hex code for secondary color." },
-                                accent: { type: Type.STRING, description: "Hex code for accent color." },
-                                neutral: { type: Type.STRING, description: "Hex code for neutral/background color." }
+                                primary: { type: Type.STRING, description: "Primary color hex code (e.g., #FF6600)." },
+                                secondary: { type: Type.STRING, description: "Secondary color hex code." },
+                                accent: { type: Type.STRING, description: "Accent color hex code." },
+                                neutral: { type: Type.STRING, description: "Neutral/background color hex code." },
                             },
                             required: ['primary', 'secondary', 'accent', 'neutral']
                         },
                         typography: {
                             type: Type.OBJECT,
                             properties: {
-                                heading: { type: Type.STRING, description: "Font family for headings." },
-                                body: { type: Type.STRING, description: "Font family for body text." }
+                                heading: { type: Type.STRING, description: "Font family for headings (e.g., 'Inter')." },
+                                body: { type: Type.STRING, description: "Font family for body text." },
                             },
-                            required: ['heading', 'body']
+                             required: ['heading', 'body']
                         },
-                        style: { type: Type.STRING, description: "Overall aesthetic (e.g., 'Minimalist', 'Playful', 'Corporate')." },
-                        spacing: { type: Type.STRING, description: "Spacing system (e.g., '8-point grid system')." },
-                        icons: { type: Type.STRING, description: "Icon style (e.g., 'Line icons', 'Solid icons')." }
+                        style: { type: Type.STRING, description: "Overall style guide (e.g., 'Modern and minimalist with rounded corners')." },
+                        spacing: { type: Type.STRING, description: "Spacing system (e.g., '4-point grid system')." },
+                        icons: { type: Type.STRING, description: "Icon style (e.g., 'Feather Icons, outlined style')." },
                     },
                     required: ['colors', 'typography', 'style', 'spacing', 'icons']
                 }
             },
             required: ['designGuidelines']
         },
-        needsClarification: true,
-        clarificationPrompt: (idea: string, data: AppData) => `What kind of visual style or aesthetic are you imagining for "${data[0]?.refinedIdea || idea}"?`,
+        clarificationPrompt: () => `What is the target audience and desired brand personality (e.g., playful, professional, minimalist)?`
     },
 ];

@@ -1,171 +1,126 @@
-import React, { useEffect, useRef, useMemo } from 'react';
-import * as d3 from 'd3';
-
-export type Node = d3.SimulationNodeDatum & {
-    id: string;
-    name: string;
-    type: 'idea' | 'module' | 'feature' | 'action';
-    color: string;
-};
-
-export interface Link extends d3.SimulationLinkDatum<Node> {}
+import React, { useState, useMemo } from 'react';
+import type { AppData } from '../types';
 
 interface MindMapProps {
-    data: {
-        nodes: Node[];
-        links: Link[];
-    };
-    onNodeClick: (event: any, node: Node | null) => void;
-    onNodeDoubleClick: (event: any, node: Node) => void;
+    appData: AppData;
+    onNodeSelect: (id: string) => void;
     selectedNodeIds: string[];
-    collapsedNodes: Set<string>;
+    highlightedNodeIds: string[];
+    searchTerm: string;
 }
 
-export const MindMap: React.FC<MindMapProps> = ({ data, onNodeClick, onNodeDoubleClick, selectedNodeIds, collapsedNodes }) => {
-    const svgRef = useRef<SVGSVGElement>(null);
-    const containerRef = useRef<HTMLDivElement>(null);
-    const simulationRef = useRef<d3.Simulation<Node, Link> | null>(null);
+export const MindMap: React.FC<MindMapProps> = ({ appData, onNodeSelect, selectedNodeIds, highlightedNodeIds, searchTerm }) => {
+    const [collapsedNodes, setCollapsedNodes] = useState<string[]>([]);
 
-    const { nodes, links } = useMemo(() => {
-        const nodesCopy = data.nodes.map(n => ({ ...n }));
-        const linksCopy = data.links.map(l => ({ ...l as Link }));
-        return { nodes: nodesCopy, links: linksCopy };
+    const handleToggleCollapse = (nodeId: string) => {
+        setCollapsedNodes(prev =>
+            prev.includes(nodeId)
+                ? prev.filter(id => id !== nodeId)
+                : [...prev, nodeId]
+        );
+    };
+
+    const data = useMemo(() => ({
+        id: 'app-idea',
+        name: appData[0]?.refinedIdea || 'App Idea',
+        description: appData[0]?.refinedIdea,
+        children: appData[1]?.modules?.map(module => ({
+            ...module,
+            children: appData[2]?.features?.filter(f => f.moduleId === module.id).map(feature => ({
+                ...feature,
+                children: appData[3]?.actions?.filter(a => a.featureId === feature.id)
+            }))
+        }))
+    }), [appData]);
+
+    const allParentNodeIds = useMemo(() => {
+        const ids: string[] = [];
+        const findParentIds = (node: any) => {
+            if (!node) return;
+            if (node.children && node.children.length > 0) {
+                ids.push(node.id);
+                node.children.forEach(findParentIds);
+            }
+        };
+        findParentIds(data);
+        return ids;
     }, [data]);
 
-    useEffect(() => {
-        if (!svgRef.current || !containerRef.current) return;
+    const handleCollapseAll = () => {
+        setCollapsedNodes(allParentNodeIds);
+    };
 
-        const { width, height } = containerRef.current.getBoundingClientRect();
-        const svg = d3.select(svgRef.current)
-            .attr('width', width)
-            .attr('height', height)
-            .attr('viewBox', [-width / 2, -height / 2, width, height]);
+    const handleExpandAll = () => {
+        setCollapsedNodes([]);
+    };
 
-        const g = svg.select<SVGGElement>('g.content');
+    const Node = ({ node, level }: { node: any; level: number }) => {
+        if (!node) return null;
+        const isSelected = selectedNodeIds.includes(node.id);
+        const hasChildren = node.children && node.children.length > 0;
+        const isCollapsed = collapsedNodes.includes(node.id);
 
-        // Restart simulation with new data
-        if (simulationRef.current) {
-            simulationRef.current.stop();
-        }
+        const isHighlighted = highlightedNodeIds.includes(node.id);
+        const isDimmed = searchTerm && !isHighlighted;
+
+        let bgColor = 'bg-gray-100 dark:bg-gray-800';
+        let borderColor = 'border-gray-300 dark:border-gray-600';
         
-        const simulation = d3.forceSimulation<Node>(nodes)
-            .force('link', d3.forceLink<Node, Link>(links).id(d => d.id).distance(d => {
-                const sourceType = (d.source as Node).type;
-                if (sourceType === 'idea') return 150;
-                if (sourceType === 'module') return 100;
-                return 60;
-            }).strength(1))
-            .force('charge', d3.forceManyBody().strength(-400))
-            .force('center', d3.forceCenter(0,0))
-            .force('x', d3.forceX(0).strength(0.05))
-            .force('y', d3.forceY(0).strength(0.05));
-        
-        simulationRef.current = simulation;
-
-        const link = g.selectAll<SVGPathElement, Link>('.link')
-            .data(links, d => `${(d.source as Node).id}-${(d.target as Node).id}`)
-            .join('path')
-            .attr('class', 'link')
-            .attr('stroke', '#4b5563')
-            .attr('stroke-width', 1.5);
-
-        const node = g.selectAll<SVGGElement, Node>('.node')
-            .data(nodes, d => d.id)
-            .join(enter => {
-                const nodeGroup = enter.append('g')
-                    .attr('class', 'node cursor-pointer')
-                    .call(drag(simulation));
-                
-                nodeGroup.append('circle')
-                    .attr('r', d => d.type === 'idea' ? 30 : d.type === 'module' ? 20 : 15)
-                    .attr('fill', d => d.color)
-                    .attr('stroke', '#9ca3af')
-                    .attr('stroke-width', 2);
-
-                nodeGroup.append('text')
-                    .attr('text-anchor', 'middle')
-                    .attr('dy', '.35em')
-                    .attr('fill', '#f3f4f6')
-                    .attr('class', 'text-xs font-semibold pointer-events-none select-none')
-                    .attr('stroke-width', 3)
-                    .attr('stroke', '#111827')
-                    .attr('paint-order', 'stroke')
-                    .text(d => d.name);
-
-                return nodeGroup;
-            });
-        
-        node.on('click', (event, d) => {
-            event.stopPropagation();
-            onNodeClick(event, d);
-        });
-
-        node.on('dblclick', (event, d) => {
-            event.stopPropagation();
-            onNodeDoubleClick(event, d);
-        });
-
-        simulation.on('tick', () => {
-            link.attr('d', d => {
-                const source = d.source as Node;
-                const target = d.target as Node;
-                return `M${source.x || 0},${source.y || 0} L${target.x || 0},${target.y || 0}`;
-            });
-            node.attr('transform', d => `translate(${d.x || 0},${d.y || 0})`);
-        });
-
-        const zoom = d3.zoom<SVGSVGElement, unknown>()
-            .scaleExtent([0.2, 5])
-            .on('zoom', (event) => {
-                g.attr('transform', event.transform.toString());
-            });
-
-        svg.call(zoom);
-        svg.on("click", (event) => onNodeClick(event, null));
-
-        return () => {
-            simulation.stop();
-        };
-
-    }, [nodes, links, onNodeClick, onNodeDoubleClick]);
-
-    useEffect(() => {
-        d3.selectAll<SVGGElement, Node>('.node circle')
-            .transition().duration(200)
-            .attr('stroke', d => selectedNodeIds.includes(d.id) ? '#fb923c' : '#9ca3af')
-            .attr('stroke-width', d => selectedNodeIds.includes(d.id) ? 4 : 2)
-            .attr('stroke-dasharray', d => collapsedNodes.has(d.id) ? '4 2' : 'none');
-    }, [selectedNodeIds, collapsedNodes]);
-
-    const drag = (simulation: d3.Simulation<Node, any>) => {
-        function dragstarted(event: d3.D3DragEvent<SVGGElement, Node, any>, d: Node) {
-            if (!event.active) simulation.alphaTarget(0.3).restart();
-            d.fx = d.x ?? null;
-            d.fy = d.y ?? null;
+        if (isSelected) {
+            bgColor = 'bg-orange-100 dark:bg-orange-900/50';
+            borderColor = 'border-orange-500';
         }
 
-        function dragged(event: d3.D3DragEvent<SVGGElement, Node, any>, d: Node) {
-            d.fx = event.x;
-            d.fy = event.y;
-        }
+        return (
+            <div 
+                style={{ marginLeft: `${level * 1.5}rem`}} 
+                className={`my-1 transition-opacity duration-300 ${isDimmed ? 'opacity-30' : 'opacity-100'}`}
+            >
+                <div 
+                    onClick={() => onNodeSelect(node.id)}
+                    onDoubleClick={() => hasChildren && handleToggleCollapse(node.id)}
+                    className={`p-2 border-l-4 ${borderColor} ${isCollapsed ? 'border-dashed' : ''} ${bgColor} rounded-r-md ${hasChildren ? 'cursor-pointer' : ''} hover:shadow-md transition-shadow relative ${isHighlighted ? 'ring-2 ring-orange-500' : ''}`}
+                >
+                    <div className="flex items-center">
+                         {hasChildren && (
+                            <span className="mr-2 text-xs text-gray-400 dark:text-gray-500 select-none">
+                                {isCollapsed ? '[+]' : '[-]'}
+                            </span>
+                        )}
+                        <div className={`font-bold text-gray-800 dark:text-gray-200`}>{node.name}</div>
+                    </div>
 
-        function dragended(event: d3.D3DragEvent<SVGGElement, Node, any>, d: Node) {
-            if (!event.active) simulation.alphaTarget(0);
-            d.fx = null;
-            d.fy = null;
-        }
+                    {node.description && level > 0 && <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{node.description}</p>}
+                </div>
+                {!isCollapsed && hasChildren && (
+                     <div className="mt-1">
+                        {node.children.map((child: any) => <Node key={child.id} node={child} level={level + 1} />)}
+                     </div>
+                )}
+            </div>
+        );
+    };
 
-        return d3.drag<SVGGElement, Node>()
-            .on('start', dragstarted)
-            .on('drag', dragged)
-            .on('end', dragended);
-    }
-    
     return (
-        <div ref={containerRef} className="w-full h-full">
-            <svg ref={svgRef} className="w-full h-full">
-                <g className="content"></g>
-            </svg>
+        <div className="flex-1 p-4 overflow-auto">
+            <div className="flex justify-between items-center mb-4 sticky top-0 bg-gray-50 dark:bg-gray-900 py-2 z-10">
+                <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">Application Structure</h2>
+                <div className="flex gap-2">
+                    <button
+                        onClick={handleCollapseAll}
+                        className="px-3 py-1 text-xs font-medium text-gray-600 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition"
+                    >
+                        Collapse All
+                    </button>
+                    <button
+                        onClick={handleExpandAll}
+                        className="px-3 py-1 text-xs font-medium text-gray-600 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition"
+                    >
+                        Expand All
+                    </button>
+                </div>
+            </div>
+            <Node node={data} level={0} />
         </div>
     );
 };

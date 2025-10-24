@@ -1,28 +1,76 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 
 interface ClarificationModalProps {
     question: string;
     options: string[];
-    onAnswer: (answer: string) => void;
+    onAnswer: (answers: string[], remarks: string) => void;
 }
 
 export const ClarificationModal: React.FC<ClarificationModalProps> = ({ question, options, onAnswer }) => {
+    const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+    const [remarks, setRemarks] = useState('');
+
+    const handleToggleOption = (option: string) => {
+        setSelectedOptions(prev =>
+            prev.includes(option)
+                ? prev.filter(item => item !== option)
+                : [...prev, option]
+        );
+    };
+
+    const handleSubmit = () => {
+        if (selectedOptions.length > 0) {
+            onAnswer(selectedOptions, remarks.trim());
+        }
+    };
+
     return (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-            <div className="bg-gray-800 rounded-xl shadow-2xl p-6 w-full max-w-lg border border-gray-700 animate-fade-in">
-                <h3 className="text-lg font-bold text-orange-400 mb-4">{question}</h3>
-                <div className="space-y-3">
-                    {options.map((option, index) => (
-                        <button
-                            key={index}
-                            onClick={() => onAnswer(option)}
-                            className="w-full text-left p-3 bg-gray-700 rounded-lg hover:bg-orange-600 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                        >
-                            {option}
-                        </button>
-                    ))}
+            <div className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl shadow-2xl p-6 w-full max-w-lg border border-gray-300 dark:border-gray-700 animate-fade-in flex flex-col" style={{maxHeight: '80vh'}}>
+                <h3 className="text-lg font-bold text-orange-500 dark:text-orange-400 mb-2">{question}</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 flex-shrink-0">Select all that apply.</p>
+                <div className="space-y-3 flex-1 overflow-y-auto mb-4 pr-2">
+                    {options.map((option, index) => {
+                        const isSelected = selectedOptions.includes(option);
+                        return (
+                            <div
+                                key={index}
+                                onClick={() => handleToggleOption(option)}
+                                className={`w-full text-left p-3 rounded-lg transition-all duration-200 cursor-pointer flex items-center gap-3 border-2 ${
+                                    isSelected
+                                        ? 'bg-orange-500/20 border-orange-500'
+                                        : 'bg-gray-100 dark:bg-gray-700 border-transparent hover:border-gray-300 dark:hover:border-gray-600'
+                                }`}
+                            >
+                                <div className={`w-5 h-5 rounded-md flex-shrink-0 flex items-center justify-center border-2 ${isSelected ? 'bg-orange-600 border-orange-500' : 'bg-gray-200 dark:bg-gray-600 border-gray-300 dark:border-gray-500'}`}>
+                                    {isSelected && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                                </div>
+                                <span>{option}</span>
+                            </div>
+                        )
+                    })}
                 </div>
+                 <div className="mt-2 mb-6 flex-shrink-0">
+                    <label htmlFor="remarks" className="block text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Additional Remarks (Optional)
+                    </label>
+                    <textarea
+                        id="remarks"
+                        rows={3}
+                        value={remarks}
+                        onChange={(e) => setRemarks(e.target.value)}
+                        placeholder="Add any extra context or details here..."
+                        className="mt-1 w-full p-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    />
+                </div>
+                <button
+                    onClick={handleSubmit}
+                    disabled={selectedOptions.length === 0}
+                    className="w-full p-3 bg-orange-500 dark:bg-orange-600 text-white font-bold rounded-lg hover:bg-orange-600 dark:hover:bg-orange-500 transition-colors disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed flex-shrink-0"
+                >
+                    Continue
+                </button>
             </div>
         </div>
     );

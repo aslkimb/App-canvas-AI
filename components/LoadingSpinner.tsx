@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 export const LoadingSpinner: React.FC = () => (
@@ -7,4 +6,3 @@ export const LoadingSpinner: React.FC = () => (
         <p className="mt-4 text-lg font-semibold text-white">AI is thinking...</p>
     </div>
 );
-
