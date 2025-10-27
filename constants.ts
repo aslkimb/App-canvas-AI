@@ -79,6 +79,7 @@ export const STEPS: Step[] = [
             },
             required: ['features']
         },
+        needsClarification: true,
         clarificationPrompt: (idea, data) => `Considering the features for "${data[1]?.refinedIdea}", are there any specific integrations with third-party services (like social media login, payment gateways, etc.) that are essential?`
     },
     {
@@ -113,6 +114,7 @@ export const STEPS: Step[] = [
             },
             required: ['actions']
         },
+        needsClarification: true,
         clarificationPrompt: () => `Are there different user roles with different permissions (e.g., admin, user, moderator)?`
     },
     {
@@ -151,6 +153,7 @@ export const STEPS: Step[] = [
             },
             required: ['pages']
         },
+        needsClarification: true,
         clarificationPrompt: () => `Is this primarily a mobile app, a desktop web app, or both?`
     },
     {
@@ -210,6 +213,7 @@ export const STEPS: Step[] = [
             },
             required: ['database']
         },
+        needsClarification: true,
         clarificationPrompt: () => `What level of data persistence and security is required? Does it need to comply with regulations like GDPR or HIPAA?`
     },
     {
@@ -242,6 +246,7 @@ export const STEPS: Step[] = [
             },
             required: ['featureDetails']
         },
+        needsClarification: true,
         clarificationPrompt: () => `What is the preferred technology stack for the frontend (e.g., React, Vue, Angular)?`
     },
     {
@@ -291,6 +296,7 @@ export const STEPS: Step[] = [
             },
             required: ['backend']
         },
+        needsClarification: true,
         clarificationPrompt: () => `What is the preferred technology stack for the backend (e.g., Node.js, Python, serverless)?`
     },
     {
@@ -337,6 +343,7 @@ export const STEPS: Step[] = [
             },
             required: ['designGuidelines']
         },
+        needsClarification: true,
         clarificationPrompt: () => `What is the target audience and desired brand personality (e.g., playful, professional, minimalist)?`
     },
 ];

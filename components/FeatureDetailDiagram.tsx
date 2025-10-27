@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { AppData } from '../types';
 
 interface FeatureDetailDiagramProps {
@@ -7,6 +7,11 @@ interface FeatureDetailDiagramProps {
     selectedNodeIds: string[];
     highlightedNodeIds: string[];
     searchTerm: string;
+}
+
+interface NodeProps {
+    node: any;
+    level: number;
 }
 
 export const FeatureDetailDiagram: React.FC<FeatureDetailDiagramProps> = ({ appData, onNodeSelect, selectedNodeIds, highlightedNodeIds, searchTerm }) => {
@@ -25,8 +30,24 @@ export const FeatureDetailDiagram: React.FC<FeatureDetailDiagramProps> = ({ appD
         };
     });
 
-    const Node = ({ node, level }: { node: any; level: number }) => {
+    // State for collapsed nodes
+    const [collapsedNodes, setCollapsedNodes] = useState<Set<string>>(new Set());
+
+    const toggleNode = (id: string) => {
+        setCollapsedNodes(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(id)) {
+                newSet.delete(id);
+            } else {
+                newSet.add(id);
+            }
+            return newSet;
+        });
+    };
+
+    const Node: React.FC<NodeProps> = ({ node, level }) => {
         const isSelected = selectedNodeIds.includes(node.id);
+        const isCollapsed = collapsedNodes.has(node.id);
         const basePadding = 'pl-4';
         const levelPadding = `ml-${level * 6}`;
         
@@ -42,16 +63,42 @@ export const FeatureDetailDiagram: React.FC<FeatureDetailDiagramProps> = ({ appD
             borderColor = 'border-orange-500';
         }
 
+        // Determine if node has children
+        const hasChildren = node.children && node.children.length > 0;
+
         return (
             <div className={`${basePadding} ${levelPadding} my-2 transition-opacity duration-300 ${isDimmed ? 'opacity-30' : 'opacity-100'}`}>
                 <div 
                     onClick={() => onNodeSelect(node.id)}
-                    className={`p-3 border-l-4 ${borderColor} ${bgColor} rounded-r-md cursor-pointer hover:shadow-lg transition-shadow relative ${isHighlighted ? 'ring-2 ring-orange-500' : ''}`}
+                    className={`p-3 border-l-4 ${borderColor} ${bgColor} rounded-r-md cursor-pointer hover:shadow-lg transition-shadow relative ${isHighlighted ? 'ring-4 ring-orange-500 ring-opacity-70 animate-pulse' : ''}`}
                 >
-                    <div className={`font-bold ${textColor}`}>{node.name}</div>
-                    {node.description && <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 whitespace-pre-wrap">{node.description}</p>}
+                    <div className="flex items-start">
+                        {hasChildren && (
+                            <button 
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleNode(node.id);
+                                }}
+                                className="mr-2 mt-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none"
+                            >
+                                {isCollapsed ? (
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                ) : (
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                                    </svg>
+                                )}
+                            </button>
+                        )}
+                        <div>
+                            <div className={`font-bold ${textColor}`}>{node.name}</div>
+                            {node.description && <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 whitespace-pre-wrap">{node.description}</p>}
+                        </div>
+                    </div>
                 </div>
-                {node.children && node.children.length > 0 && (
+                {hasChildren && !isCollapsed && (
                      <div className="mt-2">
                         {node.children.map((child: any) => <Node key={child.id} node={child} level={level + 1} />)}
                      </div>

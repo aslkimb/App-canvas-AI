@@ -11,6 +11,7 @@ import { PageDiagram } from './components/PageDiagram';
 import { EntityDiagram } from './components/EntityDiagram';
 import { FeatureDetailDiagram } from './components/FeatureDetailDiagram';
 import { BackendDiagram } from './components/BackendDiagram';
+import { DesignSystemDiagram } from './components/DesignSystemDiagram';
 import { InspectorPanel } from './components/InspectorPanel';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { ClarificationModal } from './components/ClarificationModal';
@@ -21,10 +22,10 @@ import html2canvas from 'html2canvas';
 
 
 // Icons for buttons
-const BackIcon = () => <svg xmlns="http://www.w.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" /></svg>;
-const NextIcon = () => <svg xmlns="http://www.w.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" /></svg>;
+const BackIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" /></svg>;
+const NextIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110 2h11.586l-4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" /></svg>;
 const RegenerateIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h5M20 20v-5h-5M4 4l1.5 1.5A9 9 0 0112 5v0a9 9 0 017.5 12.5M20 20l-1.5-1.5A9 9 0 0112 19v0a9 9 0 01-7.5-12.5" /></svg>;
-const SettingsIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>;
+const SettingsIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c-.94 1.543-.826 3.31-2.37 2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>;
 const ExportIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" /></svg>;
 const SaveIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>;
 const LoadIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h5M20 20v-5h-5M4 4l1.5 1.5A9 9 0 0112 5v0a9 9 0 017.5 12.5M20 20l-1.5-1.5A9 9 0 0112 19v0a9 9 0 01-7.5-12.5" /></svg>;
@@ -38,7 +39,7 @@ function App() {
     const [completedSteps, setCompletedSteps] = useState<StepKey[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [clarification, setClarification] = useState<Clarification | null>(null);
+    const [clarification, setClarification] = useState<{ questions: Clarification[] } | null>(null);
     const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
     const [selectedNodeIds, setSelectedNodeIds] = useState<string[]>([]);
@@ -102,8 +103,7 @@ function App() {
 
 
     // --- State & Data Handlers ---
-
-    const runStep = async (forceRefetch = false) => {
+    const runStep = async (context?: any, forceRefetch = false) => {
         const currentStep = STEPS.find(s => s.id === activeStep);
         if (!currentStep) return;
 
@@ -112,16 +112,108 @@ function App() {
         setClarification(null);
 
         try {
-            if (currentStep.needsClarification) {
+            // Always validate API key - no development mode exceptions
+            if (!apiKey) {
+                throw new Error("An API Key must be set");
+            }
+
+            if (currentStep.needsClarification && !context) {
                 const prompt = currentStep.clarificationPrompt(idea, appData);
-                const result = await generateService({ apiKey, modelName, prompt, type: 'clarification' });
-                setClarification(result);
+                
+                // Generate multiple clarifying questions using the AI service
+                // Create a prompt that asks for multiple questions using MCPS approach
+                const multiQuestionPrompt = `
+You are an expert application planning assistant using Multi-Clarification Prompting System (MCPS) to gather detailed requirements.
+
+CONTEXT:
+- Original Idea: "${idea}"
+${appData[1] ? `- Refined Idea: "${appData[1].refinedIdea}"` : ''}
+${appData[1] && appData[1].modules ? `- Current Modules: ${appData[1].modules.map(m => m.name).join(', ')}` : ''}
+
+TASK:
+Generate exactly 2 clarifying questions to better understand the requirements for this step:
+"${currentStep.name}"
+
+REQUIREMENTS FOR QUESTIONS:
+1. Each question must be specific and directly related to the step and context
+2. Questions should progressively refine the requirements
+3. Each question must have exactly 3 relevant answer options
+4. Answer options should represent distinct approaches or choices
+5. Questions should help identify key decisions for implementation
+
+OUTPUT FORMAT:
+Return ONLY a JSON array with exactly 2 objects. Each object must have:
+- "question": A specific clarifying question (string)
+- "options": Exactly 3 distinct answer options (array of strings)
+
+Example format:
+[
+  {
+    "question": "What is the primary goal for users of this app?",
+    "options": ["Connect with others", "Learn new skills", "Complete tasks efficiently"]
+  },
+  {
+    "question": "What is the target user experience priority?",
+    "options": ["Speed and performance", "Rich features and customization", "Simplicity and ease of use"]
+  }
+]
+
+Do not include any other text, explanations, or formatting in your response.
+`;
+
+                // Generate multiple questions using the AI service
+                try {
+                    const result = await generateService({ 
+                        apiKey, 
+                        modelName, 
+                        prompt: multiQuestionPrompt, 
+                        type: 'generation',  // Use generation type to get array response
+                        schema: {
+                            type: 'array',
+                            items: {
+                                type: 'object',
+                                properties: {
+                                    question: { type: 'string' },
+                                    options: { 
+                                        type: 'array',
+                                        items: { type: 'string' },
+                                        minItems: 3,
+                                        maxItems: 3
+                                    }
+                                },
+                                required: ['question', 'options']
+                            },
+                            minItems: 2,
+                            maxItems: 2
+                        }
+                    });
+                    
+                    // Ensure we have the right format
+                    const multiClarification = {
+                        questions: Array.isArray(result) ? result : [result]
+                    };
+                    setClarification(multiClarification);
+                } catch (error) {
+                    console.error("Error generating multiple questions:", error);
+                    // Fallback to single question generation
+                    const result = await generateService({ 
+                        apiKey, 
+                        modelName, 
+                        prompt: currentStep.clarificationPrompt(idea, appData), 
+                        type: 'clarification' 
+                    });
+                    // Convert single clarification to multi-clarification format
+                    const multiClarification = {
+                        questions: [result]
+                    };
+                    setClarification(multiClarification);
+                }
                 // Stop here and wait for user input
                 return;
             }
 
-            // If no clarification needed, proceed to generate content
-            await generateStepContent({}, forceRefetch);
+            // If no clarification needed or context is provided, proceed to generate content
+            await generateStepContent(context || {}, forceRefetch);
 
         } catch (e: any) {
             setError(e.message || "An unknown error occurred.");
@@ -138,6 +230,7 @@ function App() {
         setError(null);
         
         try {
+            // Remove all mock data - always use AI model
             const prompt = currentStep.prompt(idea, appData, context);
             const result = await generateService({
                 apiKey,
@@ -155,7 +248,7 @@ function App() {
         } catch (e: any) {
             setError(e.message || "An unknown error occurred.");
         } finally {
-             setIsLoading(false);
+         setIsLoading(false);
         }
     };
 
@@ -167,13 +260,15 @@ function App() {
         setSelectedNodeIds(['app-idea']);
     };
 
-    const handleClarificationAnswer = (answers: string[], remarks: string) => {
+    const handleClarificationAnswer = (answers: string[][], remarks: string) => {
         const context = {
             clarificationAnswers: answers,
             remarks: remarks,
         };
         setClarification(null);
-        generateStepContent(context);
+        
+        // Generate content for all steps by calling runStep with the context
+        runStep(context);
     };
 
     const handleApiKeySave = (newApiKey: string, newModel: string) => {
@@ -240,7 +335,7 @@ function App() {
         }
     };
 
-    const handleExport = (format: 'md' | 'json' | 'txt' | 'png') => {
+    const handleExport = (format: 'md' | 'json' | 'txt' | 'png', selectedSteps: number[]) => {
         if (format === 'png') {
             if (diagramContainerRef.current) {
                 setIsLoading(true);
@@ -259,32 +354,66 @@ function App() {
                     setIsLoading(false);
                 });
             }
-            setIsExportModalOpen(false);
             return;
         }
 
         let content = '';
         let filename = `app-canvas-export.${format}`;
 
+        // Filter appData to only include selected steps
+        const filteredData: any = {};
+        selectedSteps.forEach(step => {
+            if (appData[step]) {
+                filteredData[step] = appData[step];
+            }
+        });
+
         if (format === 'json') {
-            const exportData = {
+            // Create a structured export with relationships
+            const exportData: any = {
                 idea: appData[0]?.refinedIdea,
-                modules: appData[1]?.modules?.map(m => ({
-                    ...m,
-                    features: appData[2]?.features?.filter(f => f.moduleId === m.id).map(f => ({
-                        ...f,
-                        actions: appData[3]?.actions?.filter(a => a.featureId === f.id)
-                    }))
-                })),
-                pages: appData[4]?.pages,
-                database: appData[5]?.database,
-                design: appData[8]?.designGuidelines,
+                exportedSteps: selectedSteps,
+                timestamp: new Date().toISOString()
             };
+            
+            if (selectedSteps.includes(1)) {
+                exportData.modules = appData[1]?.modules;
+            }
+            
+            if (selectedSteps.includes(2)) {
+                exportData.features = appData[2]?.features;
+            }
+            
+            if (selectedSteps.includes(3)) {
+                exportData.actions = appData[3]?.actions;
+            }
+            
+            if (selectedSteps.includes(4)) {
+                exportData.pages = appData[4]?.pages;
+            }
+            
+            if (selectedSteps.includes(5)) {
+                exportData.database = appData[5]?.database;
+            }
+            
+            if (selectedSteps.includes(6)) {
+                exportData.featureDetails = appData[6]?.featureDetails;
+            }
+            
+            if (selectedSteps.includes(7)) {
+                exportData.backend = appData[7]?.backend;
+            }
+            
+            if (selectedSteps.includes(8)) {
+                exportData.designGuidelines = appData[8]?.designGuidelines;
+            }
+            
             content = JSON.stringify(exportData, null, 2);
         } else if (format === 'md') {
-            // ... (Markdown generation logic)
+            content = generateMarkdownExport(filteredData, selectedSteps);
         } else {
-            // ... (TXT generation logic)
+            // Plain text format
+            content = generateTextExport(filteredData, selectedSteps);
         }
 
         const blob = new Blob([content], { type: `text/${format};charset=utf-8;` });
@@ -292,7 +421,228 @@ function App() {
         link.href = URL.createObjectURL(blob);
         link.download = filename;
         link.click();
-        setIsExportModalOpen(false);
+    };
+
+    const generateMarkdownExport = (filteredData: any, selectedSteps: number[]): string => {
+        let content = `# App Canvas Export\n\n`;
+        content += `Exported on: ${new Date().toLocaleString()}\n\n`;
+        
+        const stepNames = [
+            "Refine Idea & Define Modules",
+            "Define Features",
+            "Detail User Actions",
+            "Design Pages & User Flow",
+            "Define Database Schema",
+            "Plan Feature Implementation",
+            "Define Backend Logic",
+            "Establish Design System"
+        ];
+        
+        selectedSteps.forEach(step => {
+            content += `## Step ${step}: ${stepNames[step - 1]}\n\n`;
+            
+            switch (step) {
+                case 1:
+                    content += `**Refined Idea:** ${filteredData[1]?.refinedIdea}\n\n`;
+                    content += `### Modules\n\n`;
+                    filteredData[1]?.modules?.forEach((module: any) => {
+                        content += `- **${module.name}**: ${module.description}\n`;
+                    });
+                    content += `\n`;
+                    break;
+                case 2:
+                    content += `### Features\n\n`;
+                    filteredData[2]?.features?.forEach((feature: any) => {
+                        content += `- **${feature.name}**: ${feature.description}\n`;
+                    });
+                    content += `\n`;
+                    break;
+                case 3:
+                    content += `### User Actions\n\n`;
+                    filteredData[3]?.actions?.forEach((action: any) => {
+                        content += `- **${action.name}**: ${action.description}\n`;
+                    });
+                    content += `\n`;
+                    break;
+                case 4:
+                    content += `### Pages\n\n`;
+                    filteredData[4]?.pages?.forEach((page: any) => {
+                        content += `- **${page.name}** (${page.layout}): ${page.description}\n`;
+                        if (page.components && page.components.length > 0) {
+                            content += `  - Components: ${page.components.join(', ')}\n`;
+                        }
+                        if (page.links_to && page.links_to.length > 0) {
+                            content += `  - Links to: ${page.links_to.join(', ')}\n`;
+                        }
+                    });
+                    content += `\n`;
+                    break;
+                case 5:
+                    content += `### Database Entities\n\n`;
+                    filteredData[5]?.database?.forEach((entity: any) => {
+                        content += `- **${entity.name}**\n`;
+                        entity.attributes.forEach((attr: any) => {
+                            content += `  - ${attr.name} (${attr.type}): ${attr.description}\n`;
+                        });
+                    });
+                    content += `\n`;
+                    break;
+                case 6:
+                    content += `### Feature Implementation Details\n\n`;
+                    filteredData[6]?.featureDetails?.forEach((detail: any) => {
+                        content += `- **Feature ID ${detail.featureId}**\n`;
+                        content += `  - State Management: ${detail.stateManagement}\n`;
+                        content += `  - Form Handling: ${detail.formHandling}\n`;
+                        content += `  - Authorization: ${detail.authorization}\n\n`;
+                    });
+                    break;
+                case 7:
+                    content += `### Backend Logic\n\n`;
+                    content += `#### Functions\n\n`;
+                    filteredData[7]?.backend?.functions?.forEach((func: any) => {
+                        content += `- **${func.name}**: ${func.description}\n`;
+                    });
+                    content += `\n#### Cron Jobs\n\n`;
+                    filteredData[7]?.backend?.cronJobs?.forEach((job: any) => {
+                        content += `- **${job.name}** (${job.schedule}): ${job.description}\n`;
+                    });
+                    content += `\n`;
+                    break;
+                case 8:
+                    content += `### Design System\n\n`;
+                    if (filteredData[8]?.designGuidelines) {
+                        const guidelines = filteredData[8].designGuidelines;
+                        content += `**Colors:**\n`;
+                        content += `- Primary: ${guidelines.colors.primary}\n`;
+                        content += `- Secondary: ${guidelines.colors.secondary}\n`;
+                        content += `- Accent: ${guidelines.colors.accent}\n`;
+                        content += `- Neutral: ${guidelines.colors.neutral}\n\n`;
+                        
+                        content += `**Typography:**\n`;
+                        content += `- Heading: ${guidelines.typography.heading}\n`;
+                        content += `- Body: ${guidelines.typography.body}\n\n`;
+                        
+                        content += `**Style:** ${guidelines.style}\n\n`;
+                        content += `**Spacing:** ${guidelines.spacing}\n\n`;
+                        content += `**Icons:** ${guidelines.icons}\n\n`;
+                    }
+                    break;
+            }
+        });
+        
+        return content;
+    };
+
+    const generateTextExport = (filteredData: any, selectedSteps: number[]): string => {
+        let content = `App Canvas Export\n`;
+        content += `=================\n\n`;
+        content += `Exported on: ${new Date().toLocaleString()}\n\n`;
+        
+        const stepNames = [
+            "Refine Idea & Define Modules",
+            "Define Features",
+            "Detail User Actions",
+            "Design Pages & User Flow",
+            "Define Database Schema",
+            "Plan Feature Implementation",
+            "Define Backend Logic",
+            "Establish Design System"
+        ];
+        
+        selectedSteps.forEach(step => {
+            content += `Step ${step}: ${stepNames[step - 1]}\n`;
+            content += `${'='.repeat(20 + stepNames[step - 1].length)}\n\n`;
+            
+            switch (step) {
+                case 1:
+                    content += `Refined Idea: ${filteredData[1]?.refinedIdea}\n\n`;
+                    content += `Modules:\n`;
+                    filteredData[1]?.modules?.forEach((module: any) => {
+                        content += `- ${module.name}: ${module.description}\n`;
+                    });
+                    content += `\n`;
+                    break;
+                case 2:
+                    content += `Features:\n`;
+                    filteredData[2]?.features?.forEach((feature: any) => {
+                        content += `- ${feature.name}: ${feature.description}\n`;
+                    });
+                    content += `\n`;
+                    break;
+                case 3:
+                    content += `User Actions:\n`;
+                    filteredData[3]?.actions?.forEach((action: any) => {
+                        content += `- ${action.name}: ${action.description}\n`;
+                    });
+                    content += `\n`;
+                    break;
+                case 4:
+                    content += `Pages:\n`;
+                    filteredData[4]?.pages?.forEach((page: any) => {
+                        content += `- ${page.name} (${page.layout}): ${page.description}\n`;
+                        if (page.components && page.components.length > 0) {
+                            content += `  Components: ${page.components.join(', ')}\n`;
+                        }
+                        if (page.links_to && page.links_to.length > 0) {
+                            content += `  Links to: ${page.links_to.join(', ')}\n`;
+                        }
+                    });
+                    content += `\n`;
+                    break;
+                case 5:
+                    content += `Database Entities:\n`;
+                    filteredData[5]?.database?.forEach((entity: any) => {
+                        content += `- ${entity.name}\n`;
+                        entity.attributes.forEach((attr: any) => {
+                            content += `  - ${attr.name} (${attr.type}): ${attr.description}\n`;
+                        });
+                    });
+                    content += `\n`;
+                    break;
+                case 6:
+                    content += `Feature Implementation Details:\n`;
+                    filteredData[6]?.featureDetails?.forEach((detail: any) => {
+                        content += `- Feature ID ${detail.featureId}\n`;
+                        content += `  State Management: ${detail.stateManagement}\n`;
+                        content += `  Form Handling: ${detail.formHandling}\n`;
+                        content += `  Authorization: ${detail.authorization}\n\n`;
+                    });
+                    break;
+                case 7:
+                    content += `Backend Logic:\n`;
+                    content += `Functions:\n`;
+                    filteredData[7]?.backend?.functions?.forEach((func: any) => {
+                        content += `- ${func.name}: ${func.description}\n`;
+                    });
+                    content += `\nCron Jobs:\n`;
+                    filteredData[7]?.backend?.cronJobs?.forEach((job: any) => {
+                        content += `- ${job.name} (${job.schedule}): ${job.description}\n`;
+                    });
+                    content += `\n`;
+                    break;
+                case 8:
+                    content += `Design System:\n`;
+                    if (filteredData[8]?.designGuidelines) {
+                        const guidelines = filteredData[8].designGuidelines;
+                        content += `Colors:\n`;
+                        content += `- Primary: ${guidelines.colors.primary}\n`;
+                        content += `- Secondary: ${guidelines.colors.secondary}\n`;
+                        content += `- Accent: ${guidelines.colors.accent}\n`;
+                        content += `- Neutral: ${guidelines.colors.neutral}\n\n`;
+                        
+                        content += `Typography:\n`;
+                        content += `- Heading: ${guidelines.typography.heading}\n`;
+                        content += `- Body: ${guidelines.typography.body}\n\n`;
+                        
+                        content += `Style: ${guidelines.style}\n\n`;
+                        content += `Spacing: ${guidelines.spacing}\n\n`;
+                        content += `Icons: ${guidelines.icons}\n\n`;
+                    }
+                    break;
+            }
+        });
+        
+        return content;
     };
 
     // --- Derived State & Render Logic ---
@@ -324,14 +674,16 @@ function App() {
              }
         });
         
-        // Add backend nodes
+        // Add backend nodes - using the correct ID format from BackendDiagram
         if (appData[7]?.backend) {
-            appData[7].backend.functions.forEach(f => {
-                const id = `func-${f.featureId}-${f.name.replace(/\s/g, '-')}`;
+            appData[7].backend.functions.forEach((f, i) => {
+                // Use the same ID format as in BackendDiagram
+                const id = `func-${i}-${f.name.replace(/\s/g, '-')}`;
                 if (f.name.toLowerCase().includes(term)) ids.push(id);
             });
-            appData[7].backend.cronJobs.forEach(c => {
-                 const id = `cron-${c.name.replace(/\s/g, '-')}`;
+            appData[7].backend.cronJobs.forEach((c, i) => {
+                 // Use the same ID format as in BackendDiagram
+                 const id = `cron-${i}-${c.name.replace(/\s/g, '-')}`;
                  if (c.name.toLowerCase().includes(term)) ids.push(id);
             });
         }
@@ -362,14 +714,7 @@ function App() {
                  {activeStep === 5 && <EntityDiagram appData={appData} onNodeSelect={(id) => setSelectedNodeIds([id])} selectedNodeIds={selectedNodeIds} theme={theme} highlightedNodeIds={highlightedNodeIds} searchTerm={searchTerm}/>}
                  {activeStep === 6 && <FeatureDetailDiagram appData={appData} onNodeSelect={(id) => setSelectedNodeIds([id])} selectedNodeIds={selectedNodeIds} highlightedNodeIds={highlightedNodeIds} searchTerm={searchTerm}/>}
                  {activeStep === 7 && <BackendDiagram appData={appData} onNodeSelect={(id) => setSelectedNodeIds([id])} selectedNodeIds={selectedNodeIds} highlightedNodeIds={highlightedNodeIds} searchTerm={searchTerm}/>}
-                 {activeStep === 8 && (
-                    <div className="p-8">
-                         <h2 className="text-xl font-bold mb-4">Design System</h2>
-                         <pre className="text-xs bg-gray-100 dark:bg-gray-800 p-4 rounded-lg overflow-auto">
-                             {JSON.stringify(appData[8]?.designGuidelines, null, 2)}
-                         </pre>
-                    </div>
-                 )}
+                 {activeStep === 8 && <DesignSystemDiagram appData={appData} />}
             </div>
         );
     };
@@ -386,10 +731,14 @@ function App() {
     return (
         <div className="h-screen w-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 flex flex-col font-sans">
             {isLoading && <LoadingSpinner />}
-            {clarification && <ClarificationModal {...clarification} onAnswer={handleClarificationAnswer} />}
+            {clarification && <ClarificationModal questions={clarification.questions} onAnswer={handleClarificationAnswer} />}
             {isSettingsOpen && <SettingsPanel apiKey={apiKey} model={modelName} onSave={handleApiKeySave} onClose={() => setIsSettingsOpen(false)} />}
-            {isExportModalOpen && <ExportModal onExport={handleExport} onClose={() => setIsExportModalOpen(false)}/>}
-            {feedbackMessage && <div className="animate-fade-in-out fixed bottom-5 left-1/2 -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50">{feedbackMessage}</div>}
+            {isExportModalOpen && <ExportModal onExport={handleExport} onClose={() => setIsExportModalOpen(false)} completedSteps={completedSteps}/>}
+            {feedbackMessage && (
+                <div className="animate-fade-in-out fixed bottom-5 left-1/2 -translate-x-1/2 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg z-50">
+                    {feedbackMessage}
+                </div>
+            )}
             
             {/* Header */}
             <header className="flex-shrink-0 h-16 bg-white dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700/50 flex items-center justify-between px-4 z-20">

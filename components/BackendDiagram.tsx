@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import type { AppData } from '../types';
 
 interface BackendDiagramProps {
@@ -9,20 +9,53 @@ interface BackendDiagramProps {
     searchTerm: string;
 }
 
+interface NodeProps {
+    node: any;
+    level: number;
+    type?: string;
+}
+
 export const BackendDiagram: React.FC<BackendDiagramProps> = ({ appData, onNodeSelect, selectedNodeIds, highlightedNodeIds, searchTerm }) => {
     const features = appData[2]?.features || [];
     const backendData = appData[7]?.backend;
 
-    const functions = backendData?.functions.map(f => ({ ...f, id: `func-${f.featureId}-${f.name.replace(/\s/g, '-')}` })) || [];
-    const cronJobs = backendData?.cronJobs.map(c => ({ ...c, id: `cron-${c.name.replace(/\s/g, '-')}` })) || [];
+    // Generate function IDs to match InspectorPanel expectations
+    const functions = backendData?.functions.map((f, i) => ({ 
+        ...f, 
+        id: `func-${i}-${f.name.replace(/\s/g, '-')}`,
+        index: i 
+    })) || [];
+    
+    // Generate cron job IDs to match InspectorPanel expectations
+    const cronJobs = backendData?.cronJobs.map((c, i) => ({ 
+        ...c, 
+        id: `cron-${i}-${c.name.replace(/\s/g, '-')}`,
+        index: i 
+    })) || [];
 
     const featuresWithFunctions = features.map(feature => ({
         ...feature,
         children: functions.filter(f => f.featureId === feature.id)
     }));
 
-    const Node = ({ node, level, type = 'feature' }: { node: any; level: number; type?: string }) => {
+    // State for collapsed nodes
+    const [collapsedNodes, setCollapsedNodes] = useState<Set<string>>(new Set());
+
+    const toggleNode = (id: string) => {
+        setCollapsedNodes(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(id)) {
+                newSet.delete(id);
+            } else {
+                newSet.add(id);
+            }
+            return newSet;
+        });
+    };
+
+    const Node: React.FC<NodeProps> = ({ node, level, type = 'feature' }) => {
         const isSelected = selectedNodeIds.includes(node.id);
+        const isCollapsed = collapsedNodes.has(node.id);
         const basePadding = 'pl-4';
         const levelPadding = `ml-${level * 6}`;
         
@@ -46,17 +79,43 @@ export const BackendDiagram: React.FC<BackendDiagramProps> = ({ appData, onNodeS
             borderColor = 'border-orange-500';
         }
 
+        // Determine if node has children
+        const hasChildren = node.children && node.children.length > 0;
+
         return (
             <div className={`${basePadding} ${levelPadding} my-2 transition-opacity duration-300 ${isDimmed ? 'opacity-30' : 'opacity-100'}`}>
                 <div
                     onClick={() => onNodeSelect(node.id)}
-                    className={`p-3 border-l-4 ${borderColor} ${bgColor} rounded-r-md cursor-pointer hover:shadow-lg transition-shadow relative ${isHighlighted ? 'ring-2 ring-orange-500' : ''}`}
+                    className={`p-3 border-l-4 ${borderColor} ${bgColor} rounded-r-md cursor-pointer hover:shadow-lg transition-shadow relative ${isHighlighted ? 'ring-4 ring-orange-500 ring-opacity-70 animate-pulse' : ''}`}
                 >
-                    <div className={`font-bold ${textColor}`}>{node.name}</div>
-                    {node.description && <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{node.description}</p>}
-                    {node.schedule && <code className="text-xs bg-gray-200 dark:bg-gray-700 px-1 py-0.5 rounded mt-2 inline-block">{node.schedule}</code>}
+                    <div className="flex items-start">
+                        {hasChildren && (
+                            <button 
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleNode(node.id);
+                                }}
+                                className="mr-2 mt-1 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 focus:outline-none"
+                            >
+                                {isCollapsed ? (
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                ) : (
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                                    </svg>
+                                )}
+                            </button>
+                        )}
+                        <div>
+                            <div className={`font-bold ${textColor}`}>{node.name}</div>
+                            {node.description && <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{node.description}</p>}
+                            {node.schedule && <code className="text-xs bg-gray-200 dark:bg-gray-700 px-1 py-0.5 rounded mt-2 inline-block">{node.schedule}</code>}
+                        </div>
+                    </div>
                 </div>
-                {node.children && node.children.length > 0 && (
+                {hasChildren && !isCollapsed && (
                     <div className="mt-2">
                         {node.children.map((child: any) => <Node key={child.id} node={child} level={level + 1} type="function" />)}
                     </div>
