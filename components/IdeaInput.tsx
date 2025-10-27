@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 
 interface IdeaInputProps {
@@ -28,25 +27,28 @@ export const IdeaInput: React.FC<IdeaInputProps> = ({ onStart, onSettingsClick }
             >
                 <SettingsIcon />
             </button>
-            <div className="w-full max-w-2xl text-center">
+            <div className="w-full max-w-4xl text-center">
                 <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-4">
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-600 dark:from-orange-400 dark:to-red-500">App Canvas AI</span>
                 </h1>
                 <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-400 mb-8">
-                    Turn your brilliant idea into a detailed application plan.
+                    Turn your brilliant idea into a detailed application plan. Describe your app idea in as much detail as you'd like.
                 </p>
-                <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4">
-                    <input
-                        type="text"
+                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                    <textarea
                         value={idea}
                         onChange={(e) => setIdea(e.target.value)}
-                        placeholder="e.g., A social network for urban gardeners..."
-                        className="flex-1 px-4 py-3 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition"
+                        placeholder="Describe your app idea in detail... For example: A social network for urban gardeners that allows users to share photos of their gardens, connect with local gardening experts, find nearby community gardens, and get personalized plant care reminders based on their location and the types of plants they're growing."
+                        className="w-full px-4 py-3 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-700 rounded-lg text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent transition min-h-[200px] resize-y"
+                        rows={6}
                     />
+                    <div className="text-sm text-gray-500 dark:text-gray-400 text-right">
+                        {idea.length} characters
+                    </div>
                     <button
                         type="submit"
                         disabled={!idea.trim()}
-                        className="px-6 py-3 bg-orange-500 dark:bg-orange-600 text-white font-bold rounded-lg hover:bg-orange-600 dark:hover:bg-orange-500 transition-all duration-300 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transform hover:scale-105"
+                        className="px-6 py-3 bg-orange-500 dark:bg-orange-600 text-white font-bold rounded-lg hover:bg-orange-600 dark:hover:bg-orange-500 transition-all duration-300 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transform hover:scale-105 self-center min-w-[200px]"
                     >
                         Start Brainstorming
                     </button>

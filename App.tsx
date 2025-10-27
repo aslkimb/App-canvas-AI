@@ -96,6 +96,7 @@ function App() {
     useEffect(() => {
         // This effect runs when the active step is one that hasn't been completed yet.
         const shouldProcess = activeStep > 0 && !completedSteps.includes(activeStep) && !isLoading && !clarification && !error;
+        console.log('Step processing check:', { activeStep, completedSteps, isLoading, clarification, error, shouldProcess });
         if (shouldProcess) {
             runStep();
         }
@@ -105,6 +106,7 @@ function App() {
     // --- State & Data Handlers ---
     const runStep = async (context?: any, forceRefetch = false) => {
         const currentStep = STEPS.find(s => s.id === activeStep);
+        console.log(`Running step ${activeStep}:`, currentStep?.name);
         if (!currentStep) return;
 
         setIsLoading(true);
@@ -118,6 +120,7 @@ function App() {
             }
 
             if (currentStep.needsClarification && !context) {
+                console.log(`Step ${activeStep} needs clarification`);
                 const prompt = currentStep.clarificationPrompt(idea, appData);
                 
                 // Generate multiple clarifying questions using the AI service
@@ -232,6 +235,9 @@ Do not include any other text, explanations, or formatting in your response.
         try {
             // Remove all mock data - always use AI model
             const prompt = currentStep.prompt(idea, appData, context);
+            console.log(`Generating content for step ${activeStep}: ${currentStep.name}`);
+            console.log(`Prompt: ${prompt.substring(0, 200)}...`);
+            
             const result = await generateService({
                 apiKey,
                 modelName,
@@ -242,10 +248,17 @@ Do not include any other text, explanations, or formatting in your response.
                 forceRefetch,
             });
             
-            setAppData(prev => ({ ...prev, [activeStep]: result }));
+            console.log(`Step ${activeStep} result:`, result);
+            
+            setAppData(prev => {
+                const newData = { ...prev, [activeStep]: result };
+                console.log(`Updated appData:`, newData);
+                return newData;
+            });
             setCompletedSteps(prev => [...new Set([...prev, activeStep])]);
 
         } catch (e: any) {
+            console.error(`Error in generateStepContent for step ${activeStep}:`, e);
             setError(e.message || "An unknown error occurred.");
         } finally {
          setIsLoading(false);
@@ -253,11 +266,13 @@ Do not include any other text, explanations, or formatting in your response.
     };
 
     const handleStart = (initialIdea: string) => {
+        console.log('Starting with idea:', initialIdea);
         setIdea(initialIdea);
         setAppData({ 0: { refinedIdea: initialIdea, targetAudience: 'General Audience' } });
         setCompletedSteps([0]);
         setActiveStep(1);
         setSelectedNodeIds(['app-idea']);
+        console.log('Initial appData set');
     };
 
     const handleClarificationAnswer = (answers: string[][], remarks: string) => {
@@ -278,6 +293,7 @@ Do not include any other text, explanations, or formatting in your response.
         localStorage.setItem('appcanvas_model', newModel);
         setFeedbackMessage('Settings saved!');
     };
+    
     
     const handleRegenerate = () => {
         if (window.confirm(`Are you sure you want to regenerate Step ${activeStep}? All subsequent steps will be cleared.`)) {

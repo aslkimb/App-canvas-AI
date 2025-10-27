@@ -1,42 +1,77 @@
-
 import React, { useState } from 'react';
+import type { Clarification } from '../types';
 
 interface ClarificationModalProps {
-    question: string;
-    options: string[];
-    onAnswer: (answers: string[], remarks: string) => void;
+    questions: Clarification[];
+    onAnswer: (answers: string[][], remarks: string) => void;
 }
 
-export const ClarificationModal: React.FC<ClarificationModalProps> = ({ question, options, onAnswer }) => {
-    const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+export const ClarificationModal: React.FC<ClarificationModalProps> = ({ questions, onAnswer }) => {
+    const [selectedOptions, setSelectedOptions] = useState<string[][]>(Array(questions?.length || 0).fill([]));
     const [remarks, setRemarks] = useState('');
+    const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
-    const handleToggleOption = (option: string) => {
-        setSelectedOptions(prev =>
-            prev.includes(option)
-                ? prev.filter(item => item !== option)
-                : [...prev, option]
-        );
+    // Handle case where questions might be undefined
+    if (!questions || questions.length === 0) {
+        return null;
+    }
+
+    const handleToggleOption = (option: string, questionIndex: number) => {
+        setSelectedOptions(prev => {
+            const newOptions = [...prev];
+            const questionOptions = newOptions[questionIndex] || [];
+            newOptions[questionIndex] = questionOptions.includes(option)
+                ? questionOptions.filter(item => item !== option)
+                : [...questionOptions, option];
+            return newOptions;
+        });
+    };
+
+    const handleNext = () => {
+        if (currentQuestionIndex < questions.length - 1) {
+            setCurrentQuestionIndex(prev => prev + 1);
+        }
+    };
+
+    const handlePrevious = () => {
+        if (currentQuestionIndex > 0) {
+            setCurrentQuestionIndex(prev => prev - 1);
+        }
     };
 
     const handleSubmit = () => {
-        if (selectedOptions.length > 0) {
+        // Check if all questions have at least one selected option
+        const allAnswered = selectedOptions.every(options => options.length > 0);
+        if (allAnswered) {
             onAnswer(selectedOptions, remarks.trim());
         }
     };
 
+    const currentQuestion = questions[currentQuestionIndex];
+    const currentSelectedOptions = selectedOptions[currentQuestionIndex] || [];
+
     return (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
             <div className="bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-xl shadow-2xl p-6 w-full max-w-lg border border-gray-300 dark:border-gray-700 animate-fade-in flex flex-col" style={{maxHeight: '80vh'}}>
-                <h3 className="text-lg font-bold text-orange-500 dark:text-orange-400 mb-2">{question}</h3>
+                <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-lg font-bold text-orange-500 dark:text-orange-400">
+                        Question {currentQuestionIndex + 1} of {questions.length}
+                    </h3>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                        {currentQuestionIndex + 1}/{questions.length}
+                    </span>
+                </div>
+                
+                <h4 className="text-md font-bold mb-2">{currentQuestion?.question}</h4>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-4 flex-shrink-0">Select all that apply.</p>
+                
                 <div className="space-y-3 flex-1 overflow-y-auto mb-4 pr-2">
-                    {options.map((option, index) => {
-                        const isSelected = selectedOptions.includes(option);
+                    {currentQuestion?.options?.map((option, index) => {
+                        const isSelected = currentSelectedOptions.includes(option);
                         return (
                             <div
                                 key={index}
-                                onClick={() => handleToggleOption(option)}
+                                onClick={() => handleToggleOption(option, currentQuestionIndex)}
                                 className={`w-full text-left p-3 rounded-lg transition-all duration-200 cursor-pointer flex items-center gap-3 border-2 ${
                                     isSelected
                                         ? 'bg-orange-500/20 border-orange-500'
@@ -51,26 +86,49 @@ export const ClarificationModal: React.FC<ClarificationModalProps> = ({ question
                         )
                     })}
                 </div>
-                 <div className="mt-2 mb-6 flex-shrink-0">
+                
+                <div className="mt-2 mb-4 flex-shrink-0">
                     <label htmlFor="remarks" className="block text-sm font-medium text-gray-500 dark:text-gray-400">
                         Additional Remarks (Optional)
                     </label>
                     <textarea
                         id="remarks"
-                        rows={3}
+                        rows={2}
                         value={remarks}
                         onChange={(e) => setRemarks(e.target.value)}
                         placeholder="Add any extra context or details here..."
-                        className="mt-1 w-full p-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        className="mt-1 w-full p-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm"
                     />
                 </div>
-                <button
-                    onClick={handleSubmit}
-                    disabled={selectedOptions.length === 0}
-                    className="w-full p-3 bg-orange-500 dark:bg-orange-600 text-white font-bold rounded-lg hover:bg-orange-600 dark:hover:bg-orange-500 transition-colors disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed flex-shrink-0"
-                >
-                    Continue
-                </button>
+                
+                <div className="flex gap-2 flex-shrink-0">
+                    {currentQuestionIndex > 0 && (
+                        <button
+                            onClick={handlePrevious}
+                            className="flex-1 p-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 font-bold rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                        >
+                            Previous
+                        </button>
+                    )}
+                    
+                    {currentQuestionIndex < questions.length - 1 ? (
+                        <button
+                            onClick={handleNext}
+                            disabled={currentSelectedOptions.length === 0}
+                            className="flex-1 p-3 bg-orange-500 dark:bg-orange-600 text-white font-bold rounded-lg hover:bg-orange-600 dark:hover:bg-orange-500 transition-colors disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
+                        >
+                            Next
+                        </button>
+                    ) : (
+                        <button
+                            onClick={handleSubmit}
+                            disabled={selectedOptions.some(options => options.length === 0)}
+                            className="flex-1 p-3 bg-orange-500 dark:bg-orange-600 text-white font-bold rounded-lg hover:bg-orange-600 dark:hover:bg-orange-500 transition-colors disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
+                        >
+                            Submit All Answers
+                        </button>
+                    )}
+                </div>
             </div>
         </div>
     );

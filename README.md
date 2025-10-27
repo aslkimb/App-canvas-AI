@@ -1,7 +1,3 @@
-<div align="center">
-<img width="1200" height="475" alt="App Canvas AI" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
-
 # App Canvas AI
 
 App Canvas AI is an intelligent application planning tool that helps you design, architect, and document software applications using AI-powered assistance. It guides you through a structured process to refine your app idea, define modules, features, user actions, pages, database schema, and more.
@@ -14,6 +10,7 @@ App Canvas AI is an intelligent application planning tool that helps you design,
 - **Detailed Documentation**: Automatically generates technical specifications for each component
 - **Export Functionality**: Export your app plan in multiple formats (JSON, Markdown, PNG)
 - **Design System Generation**: Automatically creates design guidelines for consistent UI/UX
+- **Long Text Input Support**: Handle detailed app ideas of any length
 
 ## Run Locally
 
@@ -63,6 +60,10 @@ You can export your completed app plan in multiple formats:
 - **AI Integration**: Google Gemini API
 - **Styling**: Tailwind CSS
 - **Visualization**: Custom React components
+
+## Handling Long Text Inputs
+
+App Canvas AI now supports detailed app idea descriptions of any length. Simply describe your app idea in as much detail as you'd like in the text area when starting the brainstorming process. The AI will process your detailed input and generate a comprehensive application plan.
 
 ## Contributing
 

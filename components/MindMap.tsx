@@ -65,9 +65,10 @@ export const MindMap: React.FC<MindMapProps> = ({ appData, onNodeSelect, selecte
 
     const data = useMemo(() => {
         console.log('=== MIND MAP DATA PROCESSING ===');
-        console.log('Step 1 (Modules):', appData[1]);
-        console.log('Step 2 (Features):', appData[2]?.features?.length || 0, 'features');
-        console.log('Step 3 (Actions):', appData[3]?.actions?.length || 0, 'actions');
+        console.log('Full appData:', appData);
+        console.log('appData[1] (Modules):', appData[1]);
+        console.log('appData[2] (Features):', appData[2]?.features?.length || 0, 'features');
+        console.log('appData[3] (Actions):', appData[3]?.actions?.length || 0, 'actions');
         
         // Check if we have the required data
         if (!appData[1]?.modules) {
