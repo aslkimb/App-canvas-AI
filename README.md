@@ -1,20 +1,73 @@
 <div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+<img width="1200" height="475" alt="App Canvas AI" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
 
-# Run and deploy your AI Studio app
+# App Canvas AI
 
-This contains everything you need to run your app locally.
+App Canvas AI is an intelligent application planning tool that helps you design, architect, and document software applications using AI-powered assistance. It guides you through a structured process to refine your app idea, define modules, features, user actions, pages, database schema, and more.
 
-View your app in AI Studio: https://ai.studio/apps/drive/16cK-W-UHDDwCd5J1V6q7CUxyYjch-VXp
+## Features
+
+- **AI-Powered Planning**: Leverage Google's Gemini AI to generate comprehensive application designs
+- **Step-by-Step Guidance**: Structured 8-step process from idea to implementation
+- **Visual Mind Mapping**: Interactive mind map visualization of your application structure
+- **Detailed Documentation**: Automatically generates technical specifications for each component
+- **Export Functionality**: Export your app plan in multiple formats (JSON, Markdown, PNG)
+- **Design System Generation**: Automatically creates design guidelines for consistent UI/UX
 
 ## Run Locally
 
-**Prerequisites:**  Node.js
-
+**Prerequisites:** Node.js
 
 1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+   ```bash
+   npm install
+   ```
+
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key:
+   ```env
+   GEMINI_API_KEY=your_api_key_here
+   ```
+
 3. Run the app:
-   `npm run dev`
+   ```bash
+   npm run dev
+   ```
+
+4. Open your browser to `http://localhost:5173` to access the application
+
+## How It Works
+
+App Canvas AI guides you through 8 structured steps:
+
+1. **Refine Idea & Define Modules** - Clarify your app concept and break it into logical modules
+2. **Define Features** - Identify key features within each module
+3. **Detail User Actions** - Break down features into specific user actions
+4. **Design Pages & User Flow** - Create page layouts and navigation flows
+5. **Define Database Schema** - Design data models and relationships
+6. **Plan Feature Implementation** - Detail technical implementation approaches
+7. **Define Backend Logic** - Outline API endpoints and scheduled tasks
+8. **Establish Design System** - Create consistent design guidelines
+
+## Export Options
+
+You can export your completed app plan in multiple formats:
+- **JSON** - Structured data for programmatic use
+- **Markdown** - Human-readable documentation
+- **PNG** - Visual diagram of your app structure
+
+## Technology Stack
+
+- **Frontend**: React with TypeScript
+- **Build Tool**: Vite
+- **AI Integration**: Google Gemini API
+- **Styling**: Tailwind CSS
+- **Visualization**: Custom React components
+
+## Contributing
+
+Contributions are welcome! Feel free to submit issues or pull requests to improve App Canvas AI.
+
+## License
+
+This project is licensed under the MIT License.

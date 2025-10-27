@@ -97,7 +97,3 @@ export interface Clarification {
     question: string;
     options: string[];
 }
-
-export interface MultiClarification {
-    questions: Clarification[];
-}
